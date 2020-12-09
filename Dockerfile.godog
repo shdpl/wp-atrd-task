@@ -1,0 +1,35 @@
+# Dockerfile References: https://docs.docker.com/engine/reference/builder/
+
+# Start from the latest golang base image
+FROM golang:latest as builder
+
+# Add Maintainer Info
+LABEL maintainer="Mariusz <shd> Gliwiński"
+
+RUN GO111MODULE=on go get github.com/cucumber/godog/cmd/godog@v0.10.0
+
+# Set the Current Working Directory inside the container
+WORKDIR $GOPATH/src/github.com/pawmart/wp-atrd-task
+
+# Copy go mod and sum files
+COPY go.mod go.sum ./
+
+# Download all dependancies. Dependencies will be cached if the go.mod and go.sum files are not changed
+RUN go mod download
+
+
+######## Start a new stage from scratch #######
+FROM golang:latest
+
+COPY --from=builder $GOPATH $GOPATH
+
+WORKDIR $GOPATH/src/github.com/pawmart/wp-atrd-task
+
+# Copy the source from the current directory to the Working Directory inside the container
+COPY . $GOPATH/src/github.com/pawmart/wp-atrd-task
+
+ENV CGO_ENABLED=0
+ENV GOOS=linux
+
+# Build the Go app
+RUN $GOPATH/bin/godog
