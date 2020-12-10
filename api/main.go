@@ -19,9 +19,10 @@ func NewApi() Api {
 	}))
 
 	r.
-		StaticFile("/swagger.yml", "./swagger/swagger.yml").
+		StaticFile("/swagger.yml", "./swagger/swagger.yml")
+	r.Group("/v1").
 		POST("/secret", secret.Add).
-		GET("/secret", secret.Get)
+		GET("/secret/:hash", secret.Get)
 
 	return r
 }

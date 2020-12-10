@@ -1,8 +1,17 @@
 package main
 
 import (
+	"fmt"
 	"github.com/cucumber/godog"
+	"github.com/go-openapi/strfmt"
+	"github.com/pawmart/wp-atrd-task/api"
+	"github.com/pawmart/wp-atrd-task/models"
+	"io/ioutil"
+	"mime"
+	"net/http"
+	"net/http/httptest"
 	"os"
+	"strings"
 	"testing"
 	"time"
 )
@@ -32,24 +41,101 @@ func InitializeTestSuite(ctx *godog.TestSuiteContext) {
 }
 
 func InitializeScenario(ctx *godog.ScenarioContext) {
-	ctx.Step(`^I send a "([^"]*)" request to "([^"]*)"$`, iSendARequestTo)
-	ctx.Step(`^I send a "([^"]*)" request to "([^"]*)" with "([^"]*)"$`, iSendARequestToWith)
-	ctx.Step(`^the JSON response should contain secret data$`, theJSONResponseShouldContainSecretData)
-	ctx.Step(`^the response code should be (\d+)$`, theResponseCodeShouldBe)
+	scenario := NewScenario(ctx)
+	ctx.Step(`^I send a "([^"]*)" request to "([^"]*)"$`, scenario.iSendARequestTo)
+	ctx.Step(`^I send a "([^"]*)" request to "([^"]*)" with "([^"]*)"$`, scenario.iSendARequestToWith)
+	ctx.Step(`^the JSON response should contain secret data$`, scenario.theJSONResponseShouldContainSecretData)
+	ctx.Step(`^the response code should be (\d+)$`, scenario.theResponseCodeShouldBe)
 }
 
-func iSendARequestTo(arg1, arg2 string) error {
-	return godog.ErrPending
+type Scenario struct {
+	api      api.Api
+	response *http.Response
 }
 
-func iSendARequestToWith(arg1, arg2, arg3 string) error {
-	return godog.ErrPending
+func NewScenario(ctx *godog.ScenarioContext) (ret *Scenario) {
+	ret = &Scenario{}
+	ret.api = api.NewApi()
+	return ret
 }
 
-func theJSONResponseShouldContainSecretData() error {
-	return godog.ErrPending
+func (this *Scenario) iSendARequestTo(method, endpoint string) (err error) {
+	var request *http.Request
+	request, err = http.NewRequest(method, endpoint, nil)
+	if err != nil {
+		return err
+	}
+	recorder := httptest.NewRecorder()
+	this.api.ServeHTTP(recorder, request)
+	this.response = recorder.Result()
+	return
 }
 
-func theResponseCodeShouldBe(arg1 int) error {
-	return godog.ErrPending
+func (this *Scenario) iSendARequestToWith(method, endpoint, parameters string) (err error) {
+	var request *http.Request
+	request, err = http.NewRequest(method, endpoint+"?"+parameters, nil)
+	if err != nil {
+		return err
+	}
+	recorder := httptest.NewRecorder()
+	this.api.ServeHTTP(recorder, request)
+	this.response = recorder.Result()
+	return err
+}
+
+func (this *Scenario) theJSONResponseShouldContainSecretData() (err error) {
+	if !isJSONMediaType(this.response.Header) {
+		return fmt.Errorf("Returned value is not of JSON media type, but %s", this.response.Header.Get("Content-Type"))
+	}
+
+	secret := models.Secret{}
+
+	var buf []byte
+	buf, err = ioutil.ReadAll(this.response.Body)
+	if err != nil {
+		return err
+	}
+
+	err = secret.UnmarshalBinary(buf)
+	if err != nil {
+		return err
+	}
+
+	err = secret.Validate(strfmt.Default)
+	if err != nil {
+		return fmt.Errorf("Invalid secret JSON '%s'; reason: %s", string(buf), err.Error())
+	}
+
+	return err
+}
+
+func (this *Scenario) theResponseCodeShouldBe(code int) error {
+	if code != this.response.StatusCode {
+		return fmt.Errorf("Expected response code %d, but received %d", code, this.response.StatusCode)
+	}
+	return nil
+}
+
+///
+
+func isJSONMediaType(header http.Header) bool {
+	contentType := header.Get("Content-Type")
+	mediaType, _, _ := mime.ParseMediaType(contentType)
+	m := strings.TrimPrefix(mediaType, "application/")
+	if len(m) == len(mediaType) {
+		return false
+	}
+	// Look for +json suffix. See https://tools.ietf.org/html/rfc6838#section-4.2.8
+	// We recognize multiple suffixes too (e.g. application/something+json+other)
+	// as that seems to be a possibility.
+	for {
+		i := strings.Index(m, "+")
+		if i == -1 {
+			return m == "json"
+		}
+		if m[0:i] == "json" {
+			return true
+		}
+		m = m[i+1:]
+	}
 }

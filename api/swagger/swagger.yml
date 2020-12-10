@@ -77,6 +77,12 @@ paths:
 definitions:
   Secret:
     type: "object"
+    required:
+      - hash
+      - secretText
+      - createdAt
+      - expiresAt
+      - remainingViews
     properties:
       hash:
         type: "string"

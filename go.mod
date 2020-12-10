@@ -1,15 +1,3 @@
 module github.com/pawmart/wp-atrd-task
 
 go 1.14
-
-require (
-	github.com/cucumber/godog v0.10.0
-	github.com/gin-contrib/cors v1.3.1
-	github.com/gin-gonic/gin v1.6.3
-	github.com/go-openapi/errors v0.19.9
-	github.com/go-openapi/strfmt v0.19.11
-	github.com/go-openapi/swag v0.19.12
-	github.com/go-openapi/validate v0.20.0
-	github.com/itsjamie/gin-cors v0.0.0-20160420130702-97b4a9da7933
-	github.com/stretchr/testify v1.6.1
-)
