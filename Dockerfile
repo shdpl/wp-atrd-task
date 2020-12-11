@@ -33,7 +33,7 @@ RUN apk --no-cache add ca-certificates
 WORKDIR /root/
 
 # Copy the Pre-built binary file from the previous stage
-COPY --from=builder /go/src/github.com/pawmart/wp-atrd-task/api/swagger/swagger.yml ./api/swagger/swagger.yml
+COPY --from=builder /go/src/github.com/pawmart/wp-atrd-task/api/swagger/swagger.yml ./swagger/swagger.yml
 COPY --from=builder /app/main .
 
 # Command to run the executable

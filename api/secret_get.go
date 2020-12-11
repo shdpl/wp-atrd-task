@@ -1,10 +1,10 @@
-package secret
+package api
 
 import (
 	"github.com/gin-gonic/gin"
 )
 
-func Add(c *gin.Context) {
+func (this *api) GetSecret(c *gin.Context) {
 	c.Status(501)
 	// c.JSON(200, gin.H{
 	// 	"createdAt":      "2017-07-21T17:32:28Z",

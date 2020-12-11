@@ -22,24 +22,24 @@ type Secret struct {
 	// The date and time of the creation
 	// Required: true
 	// Format: date-time
-	CreatedAt *strfmt.DateTime `json:"createdAt"`
+	CreatedAt strfmt.DateTime `json:"createdAt"`
 
 	// The secret cannot be reached after this time
 	// Required: true
 	// Format: date-time
-	ExpiresAt *strfmt.DateTime `json:"expiresAt"`
+	ExpiresAt strfmt.DateTime `json:"expiresAt"`
 
 	// Unique hash to identify the secrets
 	// Required: true
-	Hash *string `json:"hash"`
+	Hash string `json:"hash"`
 
 	// How many times the secret can be viewed
 	// Required: true
-	RemainingViews *int32 `json:"remainingViews"`
+	RemainingViews int32 `json:"remainingViews"`
 
 	// The secret itself
 	// Required: true
-	SecretText *string `json:"secretText"`
+	SecretText string `json:"secretText"`
 }
 
 // Validate validates this secret

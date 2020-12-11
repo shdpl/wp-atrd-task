@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -72,11 +73,14 @@ func (this *Scenario) iSendARequestTo(method, endpoint string) (err error) {
 }
 
 func (this *Scenario) iSendARequestToWith(method, endpoint, parameters string) (err error) {
-	var request *http.Request
-	request, err = http.NewRequest(method, endpoint+"?"+parameters, nil)
+	request, err := http.NewRequest(method, endpoint, strings.NewReader(parameters))
 	if err != nil {
 		return err
 	}
+	request.Header.Set("Content-Length", strconv.Itoa(len(parameters)))
+	request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	request.Header.Set("Accept", "application/json; charset=utf-8")
+
 	recorder := httptest.NewRecorder()
 	this.api.ServeHTTP(recorder, request)
 	this.response = recorder.Result()
