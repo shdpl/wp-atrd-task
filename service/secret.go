@@ -128,7 +128,7 @@ func (this *RedisSecret) FetchByHash(ctx context.Context, secret *models.Secret)
 	return nil, ok
 }
 
-func (this *RedisSecret) Ping() (err error, pong string) {
-	pong, err = this.client.Ping(context.TODO()).Result()
+func (this *RedisSecret) Ping(ctx context.Context) (err error, pong string) {
+	pong, err = this.client.Ping(ctx).Result()
 	return
 }
