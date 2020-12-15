@@ -1,9 +1,11 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"github.com/cucumber/godog"
 	"github.com/go-openapi/strfmt"
+	"github.com/go-redis/redis/v8"
 	"github.com/pawmart/wp-atrd-task/api"
 	"github.com/pawmart/wp-atrd-task/models"
 	"io/ioutil"
@@ -43,6 +45,8 @@ func InitializeTestSuite(ctx *godog.TestSuiteContext) {
 
 func InitializeScenario(ctx *godog.ScenarioContext) {
 	scenario := NewScenario(ctx)
+	ctx.BeforeStep(scenario.setupDb)
+	ctx.AfterStep(scenario.cleanupDb)
 	ctx.Step(`^I send a "([^"]*)" request to "([^"]*)"$`, scenario.iSendARequestTo)
 	ctx.Step(`^I send a "([^"]*)" request to "([^"]*)" with "([^"]*)"$`, scenario.iSendARequestToWith)
 	ctx.Step(`^the JSON response should contain secret data$`, scenario.theJSONResponseShouldContainSecretData)
@@ -52,11 +56,15 @@ func InitializeScenario(ctx *godog.ScenarioContext) {
 type Scenario struct {
 	api      api.Api
 	response *http.Response
+	database *redis.Client
+	ctx      context.Context
 }
 
 func NewScenario(ctx *godog.ScenarioContext) (ret *Scenario) {
 	ret = &Scenario{}
 	ret.api = api.NewApi()
+	ret.database = redis.NewClient(&redis.Options{Addr: "wp-atrd-task-database:6379"})
+	ret.ctx = context.Background()
 	return ret
 }
 
@@ -118,6 +126,44 @@ func (this *Scenario) theResponseCodeShouldBe(code int) error {
 		return fmt.Errorf("Expected response code %d, but received %d", code, this.response.StatusCode)
 	}
 	return nil
+}
+
+///
+
+func (this *Scenario) setupDb(step *godog.Step) {
+	if step.Text == "I send a \"GET\" request to \"/v1/secret/b75ce598-f349-4c61-9246-2053e230187d\"" {
+		err := this.database.RestoreReplace(this.ctx, "secret_b75ce598-f349-4c61-9246-2053e230187d_expiresAt", time.Minute*5, "\x00\x182025-11-18T17:53:11.134Z\t\x00\x8c\xdd\xf4ZW\\x2").Err()
+		if err != nil {
+			panic(err)
+		}
+		err = this.database.RestoreReplace(this.ctx, "secret_b75ce598-f349-4c61-9246-2053e230187d_secretText", time.Minute*5, "\x00\x10asdfasdfasdfasdf\t\x00@\xcb{FD\x13YS").Err()
+		if err != nil {
+			panic(err)
+		}
+		err = this.database.RestoreReplace(this.ctx, "secret_b75ce598-f349-4c61-9246-2053e230187d_remainingViews", time.Minute*5, "\x00\xc0\x05\t\x00\xb3\xdd\x0e\xaa\xd7\xa9\xd0\xe0").Err()
+		if err != nil {
+			panic(err)
+		}
+		err = this.database.RestoreReplace(this.ctx, "secret_b75ce598-f349-4c61-9246-2053e230187d_createdAt", time.Minute*5, "\x00\x182020-12-14T17:53:11.134Z\t\x00\xc67\xd8'\xf5\xe4\xcd\xe5").Err()
+		if err != nil {
+			panic(err)
+		}
+	}
+}
+
+func (this *Scenario) cleanupDb(step *godog.Step, err error) {
+	if step.Text == "I send a \"GET\" request to \"/v1/secret/b75ce598-f349-4c61-9246-2053e230187d\"" {
+		err2 := this.database.Del(
+			this.ctx,
+			"secret_b75ce598-f349-4c61-9246-2053e230187d_expiresAt",
+			"secret_b75ce598-f349-4c61-9246-2053e230187d_secretText",
+			"secret_b75ce598-f349-4c61-9246-2053e230187d_remainingViews",
+			"secret_b75ce598-f349-4c61-9246-2053e230187d_createdAt",
+		).Err()
+		if err2 != nil {
+			panic(err2)
+		}
+	}
 }
 
 ///

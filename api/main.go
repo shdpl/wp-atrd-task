@@ -18,7 +18,7 @@ type api struct {
 }
 
 func NewApi() Api {
-	this := api{gin.Default(), &service.RedisSecret{}}
+	this := api{gin.Default(), service.NewRedisSecret("wp-atrd-task-database:6379")}
 	this.Use(cors.New(cors.Config{
 		AllowAllOrigins: true,
 	}))
@@ -26,8 +26,8 @@ func NewApi() Api {
 	this.
 		StaticFile("/swagger.yml", "./swagger/swagger.yml")
 	this.Group("/v1").
-		POST("/secret", this.AddSecret).
-		GET("/secret/:hash", this.GetSecret)
+		POST("/secret", this.CreateSecret).
+		GET("/secret/:hash", this.FetchSecret)
 
 	return this
 }

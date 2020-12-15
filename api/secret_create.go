@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-func (this *api) AddSecret(c *gin.Context) {
+func (this *api) CreateSecret(c *gin.Context) {
 	var err error
 	var params struct {
 		Secret           string `form:"secret" binding:"required"`
@@ -30,7 +30,7 @@ func (this *api) AddSecret(c *gin.Context) {
 		ExpiresAt:      strfmt.DateTime(now.Add(time.Duration(params.ExpireAfter) * time.Minute)),
 	}
 
-	err = this.secrets.Put(c, &secret)
+	err = this.secrets.Create(c, &secret)
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return

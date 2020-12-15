@@ -32,4 +32,4 @@ ENV CGO_ENABLED=0
 ENV GOOS=linux
 
 # Build the Go app
-RUN $GOPATH/bin/godog
+CMD $GOPATH/bin/godog
