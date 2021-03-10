@@ -22,7 +22,7 @@ ENV CGO_ENABLED=0
 ENV GOOS=linux
 
 # Build the Go app
-RUN go build -a -installsuffix cgo -o /app/main $GOPATH/src/github.com/pawmart/wp-atrd-task/cmd/api/main.go
+RUN go build -a -installsuffix cgo -o /app/main $GOPATH/src/github.com/pawmart/wp-atrd-task/main.go
 
 
 ######## Start a new stage from scratch #######

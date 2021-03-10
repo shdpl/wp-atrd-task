@@ -31,13 +31,13 @@ clean-$(name)-container: stop-$(name)-container
 stop-$(name)-container:
 	docker container inspect $(name) &> /dev/null && docker container stop $(name) || true
 
-network:
+network: clean-network
 	docker network create $(name)
 
-clean-network:
+clean-network: clean-$(name)-database clean-doc
 	docker network inspect $(name) &> /dev/null && docker network rm $(name) || true
 
-network-cli:
+network-cli: network
 	docker run -it --net $(name) nicolaka/netshoot
 
 $(name)-database: clean-$(name)-database

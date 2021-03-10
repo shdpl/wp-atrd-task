@@ -7,8 +7,19 @@ import (
 )
 
 func TestNewRedisSecretConnectivity(t *testing.T) {
-	svc := NewRedisSecret("wp-atrd-task-database:6379")
+	var config Config
+	err := config.Init()
+	if err != nil {
+		panic(err)
+	}
+
+	err = config.Unmarshal("../config.test")
+	if err != nil {
+		panic(err)
+	}
+
+	svc := NewRedisSecret(config.Redis)
 	err, status := svc.Ping(context.TODO())
 	assert.NoError(t, err)
-	assert.Equal(t, status, "PONG")
+	assert.Equal(t, "PONG", status)
 }

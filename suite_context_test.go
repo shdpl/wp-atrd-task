@@ -8,6 +8,7 @@ import (
 	"github.com/go-redis/redis/v8"
 	"github.com/pawmart/wp-atrd-task/api"
 	"github.com/pawmart/wp-atrd-task/models"
+	"github.com/pawmart/wp-atrd-task/service"
 	"io/ioutil"
 	"mime"
 	"net/http"
@@ -62,8 +63,23 @@ type Scenario struct {
 
 func NewScenario(ctx *godog.ScenarioContext) (ret *Scenario) {
 	ret = &Scenario{}
-	ret.api = api.NewApi()
-	ret.database = redis.NewClient(&redis.Options{Addr: "wp-atrd-task-database:6379"})
+
+	var config service.Config
+	err := config.Init()
+	if err != nil {
+		panic(err)
+	}
+
+	err = config.Unmarshal("config")
+	if err != nil {
+		panic(err)
+	}
+
+	redisSvc := service.NewRedisSecret(
+		config.Redis,
+	)
+	ret.api = api.NewApi(redisSvc)
+	ret.database = redis.NewClient(&redis.Options{Addr: config.Redis.Address})
 	ret.ctx = context.Background()
 	return ret
 }

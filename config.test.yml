@@ -1,0 +1,2 @@
+redis:
+  address: wp-atrd-task-database:6379

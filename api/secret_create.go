@@ -12,8 +12,8 @@ func (this *api) CreateSecret(c *gin.Context) {
 	var err error
 	var params struct {
 		Secret           string `form:"secret" binding:"required"`
-		ExpireAfterViews int32  `form:"expireAfterViews" binding:"required"`
-		ExpireAfter      int32  `form:"expireAfter" binding:"required"`
+		ExpireAfterViews int32  `form:"expireAfterViews" binding:"required,max=10,min=1"`
+		ExpireAfter      int32  `form:"expireAfter" binding:"required,max=10,min=1"`
 	}
 	err = c.ShouldBind(&params)
 	if err != nil {

@@ -18,10 +18,14 @@ type RedisSecret struct {
 	client *redis.Client
 }
 
+type RedisSecretConfig struct {
+	Address string
+}
+
 //TODO: SetLogger
-func NewRedisSecret(address string) *RedisSecret {
+func NewRedisSecret(config RedisSecretConfig) *RedisSecret {
 	this := &RedisSecret{}
-	this.client = redis.NewClient(&redis.Options{Addr: address})
+	this.client = redis.NewClient(&redis.Options{Addr: config.Address})
 	return this
 }
 
